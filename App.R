@@ -17,9 +17,9 @@ getDetails <- function(s, startYear, endYear) {
   sYear <- as.numeric(substr(startYear, 1, 4))
   eYear <- as.numeric(substr(endYear, 1, 4))
   
-  medals <- filter(beer_awards, state == s & year > sYear & year < eYear)
+  medals <- filter(beer_awards, state == s & year >= sYear & year <= eYear)
   # print(eYear)
-  glimpse(medals)
+  # glimpse(medals)
   return (medals)
 }
 
@@ -49,7 +49,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(type = "tabs",
-                  tabPanel("Medals by State", plotOutput("medal", height = "600px")),
+                  tabPanel("Medals by State", plotlyOutput("medal", height = "600px")),
                   tabPanel("Breweries by State", plotOutput("brewery", height = "600px"))
       )
     )
@@ -66,17 +66,18 @@ server <- function(input, output) {
     })
   })
    
-   output$medal <- renderPlot({
+   output$medal <- renderPlotly({
      m <- evt()
      md <- m %>%
        group_by(year, medal) %>%
        mutate(counts = n())
      
-     ggplot(md ,aes(
+     p <- ggplot(md ,aes(
        x = year,
        fill = medal)) +
        geom_bar(position="stack", 
                 stat='count')
+     ggplotly(p)
    })
    
 }
