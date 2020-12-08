@@ -56,7 +56,7 @@ ui <- fluidPage(
   )
 )
 
-
+# Server side logic for UI components with reactive elements
 server <- function(input, output) {
   
    evt <- eventReactive(input$run, {

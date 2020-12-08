@@ -1,0 +1,24 @@
+---
+title: "Final Report"
+author: "Joel Reji, Aziz Isamedinov, & Naomi Wambogo "
+date: "12/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Introduction
+
+## 2. Data Preparation
+
+## 3. Encoding/Interaction Design
+
+## 4. Algorithm Design
+
+## 5. User Evaluation
+
+## 6. Future Work
+
+## 7. Apendix
