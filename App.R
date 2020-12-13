@@ -11,6 +11,7 @@ beer_awards <- beer_awards %>% mutate(state =
                                         recode(state, "wa" = "WA",
                                                "Ak" = "AK"))
 states <- distinct(beer_awards, state)
+medal_colors = c("#965A38","#DFBC00","#BFC1C2")
 
 # Function that will be called by event reactive on button click 
 getDetails <- function(s, startYear, endYear) {
@@ -74,7 +75,7 @@ server <- function(input, output) {
      
      p <- ggplot(md ,aes(
        x = year,
-       fill = medal)) +
+       fill = medal)) +scale_fill_manual(values = medal_colors)+
        geom_bar(position="stack", 
                 stat='count')
      ggplotly(p)
