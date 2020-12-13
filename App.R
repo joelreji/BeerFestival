@@ -3,6 +3,7 @@ library(ggplot2)
 library(tidyverse)
 library(shinyWidgets)
 library(plotly)
+library(stringdist)
 
 # Pre-processing
 # Read in the file, re-code the lowercase states, & get the unique states
@@ -12,6 +13,8 @@ beer_awards <- beer_awards %>% mutate(state =
                                                "Ak" = "AK"))
 states <- distinct(beer_awards, state)
 medal_colors = c("#965A38","#DFBC00","#BFC1C2")
+brewery<-distinct(beer_awards, brewery)
+beer <-beer_awards
 
 # Function that will be called by event reactive on button click 
 getDetails <- function(s, startYear, endYear) {
@@ -24,11 +27,54 @@ getDetails <- function(s, startYear, endYear) {
   return (medals)
 }
 
+#Find fuzzy duplicates with this function
+remove_duplicates <- function(vec) {
+  wordcount <- vec %>%
+    tibble(txt=vec) %>% 
+    dplyr::count(txt,sort=T)
+  
+  words <- wordcount$txt
+  
+  out <- sapply(seq_along(words)[-1],function(i) {
+    dist2 <- stringdist(words[i],words[1:i-1],method='jw',p=0.1)
+    best_fit <- which.min(dist2)
+    similarity2 <- min(dist2)
+    return(c(similarity2,best_fit))
+  }) %>% 
+    t() %>%
+    as.data.frame() %>% 
+    add_row(V1=1,V2=1,.before = 1) %>% 
+    cbind(wordcount) %>% 
+    dplyr::rename(distance=V1,best_fit=V2) %>% 
+    mutate(replacement=txt[best_fit])
+  
+  return(out)
+}
+
+out <- beer %>% 
+  rowwise() %>%
+  mutate(city_brewery=paste(city,brewery,sep=";")) %>%
+  .$city_brewery %>% 
+  remove_duplicates() %>% 
+  separate(txt,into = c("city1","brewery_orig"),sep = ";") %>%
+  separate(replacement,into=c("city2","brewery_repl"),sep=";") %>% 
+  filter(city1==city2) %>%
+  mutate(dist=stringdist(brewery_orig,brewery_repl,method="jw"))
+
+dict <- out %>% 
+  mutate(brewery_repl=ifelse(dist<=0.15,brewery_repl,brewery_orig)) %>%
+  filter(brewery_orig!=brewery_repl) 
+
+beer$brewery2 <- plyr::mapvalues(beer$brewery,from=dict$brewery_orig,to=dict$brewery_repl)
+top10 <- beer %>% count(brewery,city,state,sort=T)
+top10b <- beer %>% count(brewery2,city,state,sort=T)
+
 # Basic UI for Shiny app with components
 ui <- fluidPage(
   titlePanel("Great American Beer Festival"),
   sidebarLayout(
     sidebarPanel(
+      h3("Medal Settings"),
       selectInput("states_inp", "Choose a state:", choices = states),
       airDatepickerInput("startYear_inp",
                          label = "Start Year:",
@@ -46,12 +92,15 @@ ui <- fluidPage(
                          view = "years",
                          minView = "years",
                          dateFormat = "yyyy"),
-      actionButton("run", "Run App")
+      actionButton("run", "Run App"),
+      hr(),
+      h3("Brewery Settings"),
+      selectInput("brewery_inp", "Choose a brewery:", choices = top10[1:30,]$brewery, selected="Deschutes Brewery")
     ),
     mainPanel(
       tabsetPanel(type = "tabs",
-                  tabPanel("Medals by State", plotlyOutput("medal", height = "600px")),
-                  tabPanel("Breweries by State", plotOutput("brewery", height = "600px"))
+                  tabPanel("Medals", plotlyOutput("medal", height = "600px")),
+                  tabPanel("Breweries", plotOutput("brewery", height = "900px"))
       )
     )
   )
@@ -79,6 +128,69 @@ server <- function(input, output) {
        geom_bar(position="stack", 
                 stat='count')
      ggplotly(p)
+   })
+   
+   observeEvent(input$run, {
+     output$brewery <- renderPlot({
+       
+       #Visualization
+       
+       before <- top10 %>% slice(1:30) %>%
+         mutate(deschutes=ifelse(brewery==input$brewery_inp,"Y","N")) %>%
+         ggplot(aes(x=n,y=reorder(brewery,n),fill=deschutes))+
+         geom_col()+
+         geom_text(aes(label=n,x=n-5),col="white",size=5)+
+         geom_text(aes(label=state,x=5),col="white",size=4)+
+         scale_fill_manual(values=c("grey40","goldenrod"))+
+         theme(legend.position = "none",
+               axis.text.x = element_blank())+
+         labs(x="Number medals",y="",title="Before",subtitle="Original registered names")
+       
+       
+       after <- top10b %>% slice(1:30) %>%
+         mutate(deschutes=ifelse(brewery2==input$brewery_inp,"Y","N")) %>%
+         ggplot(aes(x=n,y=reorder(brewery2,n),fill=deschutes))+
+         geom_col()+
+         geom_text(aes(label=n,x=n-5),col="white",size=5)+
+         geom_text(aes(label=state,x=5),col="white",size=4)+
+         scale_fill_manual(values=c("grey40","goldenrod"))+
+         theme(legend.position = "none",
+               axis.text.x = element_blank())+
+         labs(x="Number medals",y="",title="After",subtitle="No fuzzy duplicates")
+       
+       
+       deschutes <- beer %>%
+         filter(brewery2==input$brewery_inp) %>% 
+         mutate(medal_num=case_when(medal=="Gold" ~ 3,
+                                    medal=="Silver" ~ 2,
+                                    medal == "Bronze" ~ 1)) %>%
+         ggplot(aes(x=year,y=medal_num,label=beer_name))+
+         geom_segment(aes(x=1989,xend=2021,y=0,yend=0))+
+         geom_segment(aes(xend=year,yend=0,col=brewery),size=1.5)+
+         geom_point(size=2)+
+         #geom_text_repel(angle=90,size=3,min.segment.length = 0)+
+         scale_y_continuous(breaks=1:3,labels = c("Bronze","Silver","Gold"))+
+         labs(x="",y="",title="Why?",subtitle="Two different names",col=NULL)+
+         theme(legend.position = c(0.8,0.7))
+       
+       #Combining the plots
+       
+       library(patchwork)
+       
+       ((before | after) / deschutes )+
+         plot_annotation(
+           #title="Top Ten Breweries with most medals in the Great American Beer Festival" #,
+           #subtitle="Deschutes Brewery was registered under a slightly different name before 2000. \nRemoving fuzzy duplicates we see that it is actually among the top 10 breweries which won most medals."
+         )+
+         plot_layout(heights=c(0.7,0.3))&
+         theme(plot.background = element_rect(fill = "white"),
+               panel.background = element_rect(fill="white"),
+               axis.title = element_text(family = "sans" ,size=14),
+               axis.text = element_text(family = "sans" ,size=14),
+               plot.title = element_text(family = "sans", face = "bold", size = 20),
+               plot.subtitle = element_text(family = "sans" ,size=16))
+     })
+     
    })
    
 }
