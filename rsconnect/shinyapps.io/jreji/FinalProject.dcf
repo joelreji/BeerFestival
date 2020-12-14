@@ -5,8 +5,8 @@ account: jreji
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3395934
-bundleId: 3987461
+bundleId: 3987486
 url: https://jreji.shinyapps.io/FinalProject/
-when: 1607960326.50549
+when: 1607960663.67138
 asMultiple: FALSE
 asStatic: FALSE
