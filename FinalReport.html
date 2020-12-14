@@ -425,6 +425,8 @@ summary {
 </div>
 <div id="encodinginteraction-design" class="section level2">
 <h2>3. Encoding/Interaction Design</h2>
+<div class="line-block">     For this Shiny application, our team made many design &amp; encoding decisions. In this particular app, we had 4 inputs: State, Start Year, End Year and Brewery name. We are using these four inputs to vary the output that the user sees. For the medals tab, we want the user to be able to control the state, start year, and end year so that we can provide a visualization of that particular state’s medal count over the years. We wanted the plot to be interactive so that the user can hover over various sections and get the details and we used Plotly in order to achieve that. We also wanted to avoid the use to red and green hues in our chart so we used the Gold/Silver/Bronze coloring and this also added to the overall coherence of the visualization.</div>
+<div class="line-block">    For the brewery tab, we have the brewery name as the customer input. Our vision for this visualization was to identify potential data errors when it comes to brewery names that could have caused the medal counts to be inaccurate. Once the user runs the app, the app loads the top 30 breweries by Medal count. In this visualization, we wanted to show the ranking of the breweries before and after the duplicates were removed. We also decided to add in a visualization that shows the introduction of the duplicate name so that the user is really able to see the fuzzy word.</div>
 </div>
 <div id="algorithm-design" class="section level2">
 <h2>4. Algorithm Design</h2>

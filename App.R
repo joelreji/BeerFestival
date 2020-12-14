@@ -14,7 +14,7 @@ beer_awards <- beer_awards %>% mutate(state =
 states <- distinct(beer_awards, state)
 medal_colors = c("#965A38","#DFBC00","#BFC1C2")
 brewery<-distinct(beer_awards, brewery)
-beer <-beer_awards
+beer <- droplevels(subset(beer_awards, brewery != "Pearl Brewing Co."))
 
 # Function that will be called by event reactive on button click 
 getDetails <- function(s, startYear, endYear) {
@@ -95,7 +95,8 @@ ui <- fluidPage(
       actionButton("run", "Run App"),
       hr(),
       h3("Brewery Settings"),
-      selectInput("brewery_inp", "Choose a brewery:", choices = top10[1:30,]$brewery, selected="Deschutes Brewery")
+      selectInput("brewery_inp", "Choose a brewery:", choices = top10[1:30,]$brewery, selected="Deschutes Brewery"),
+      sliderInput("mincount", "Select min count Medal",   min = 10, max = 25, value = 10 )
     ),
     mainPanel(
       tabsetPanel(type = "tabs",
@@ -132,11 +133,10 @@ server <- function(input, output) {
    
    observeEvent(input$run, {
      output$brewery <- renderPlot({
-       
-       #Visualization
-       
-       before <- top10 %>% slice(1:30) %>%
+
+       before <- top10 %>% slice(1:25) %>%
          mutate(deschutes=ifelse(brewery==input$brewery_inp,"Y","N")) %>%
+         filter(n>input$mincount)%>%
          ggplot(aes(x=n,y=reorder(brewery,n),fill=deschutes))+
          geom_col()+
          geom_text(aes(label=n,x=n-5),col="white",size=5)+
@@ -146,9 +146,9 @@ server <- function(input, output) {
                axis.text.x = element_blank())+
          labs(x="Number medals",y="",title="Before",subtitle="Original registered names")
        
-       
-       after <- top10b %>% slice(1:30) %>%
+       after <- top10b %>% slice(1:25) %>%
          mutate(deschutes=ifelse(brewery2==input$brewery_inp,"Y","N")) %>%
+         filter(n>input$mincount)%>%
          ggplot(aes(x=n,y=reorder(brewery2,n),fill=deschutes))+
          geom_col()+
          geom_text(aes(label=n,x=n-5),col="white",size=5)+
@@ -158,30 +158,22 @@ server <- function(input, output) {
                axis.text.x = element_blank())+
          labs(x="Number medals",y="",title="After",subtitle="No fuzzy duplicates")
        
-       
        deschutes <- beer %>%
-         filter(brewery2==input$brewery_inp) %>% 
+         filter(brewery2==input$brewery_inp & year>as.numeric(substr(input$startYear_inp, 1, 4)) & year<as.numeric(substr(input$endYear_inp, 1, 4))) %>% 
          mutate(medal_num=case_when(medal=="Gold" ~ 3,
                                     medal=="Silver" ~ 2,
                                     medal == "Bronze" ~ 1)) %>%
          ggplot(aes(x=year,y=medal_num,label=beer_name))+
-         geom_segment(aes(x=1989,xend=2021,y=0,yend=0))+
+         geom_segment(aes(x=as.numeric(substr(input$startYear_inp, 1, 4)),xend=as.numeric(substr(input$endYear_inp, 1, 4)),y=0,yend=0))+
          geom_segment(aes(xend=year,yend=0,col=brewery),size=1.5)+
          geom_point(size=2)+
-         #geom_text_repel(angle=90,size=3,min.segment.length = 0)+
          scale_y_continuous(breaks=1:3,labels = c("Bronze","Silver","Gold"))+
          labs(x="",y="",title="Why?",subtitle="Two different names",col=NULL)+
          theme(legend.position = c(0.8,0.7))
        
        #Combining the plots
        
-       library(patchwork)
-       
        ((before | after) / deschutes )+
-         plot_annotation(
-           #title="Top Ten Breweries with most medals in the Great American Beer Festival" #,
-           #subtitle="Deschutes Brewery was registered under a slightly different name before 2000. \nRemoving fuzzy duplicates we see that it is actually among the top 10 breweries which won most medals."
-         )+
          plot_layout(heights=c(0.7,0.3))&
          theme(plot.background = element_rect(fill = "white"),
                panel.background = element_rect(fill="white"),
@@ -190,9 +182,7 @@ server <- function(input, output) {
                plot.title = element_text(family = "sans", face = "bold", size = 20),
                plot.subtitle = element_text(family = "sans" ,size=16))
      })
-     
    })
-   
 }
 
 shinyApp(ui = ui, server = server)
