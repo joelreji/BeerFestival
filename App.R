@@ -4,6 +4,7 @@ library(tidyverse)
 library(shinyWidgets)
 library(plotly)
 library(stringdist)
+library(patchwork)
 
 # Pre-processing
 # Read in the file, re-code the lowercase states, & get the unique states
