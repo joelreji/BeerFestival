@@ -15,12 +15,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## 2. Data Preparation
 |       We prepared our data set by normalizing all the state names and abbreviations by mutation in order to be uniform. For example, we re-coded “Ak” to “AK”.  To get into our analysis for visualization, we created a new variable “states” that had inputs for the unique beer awards by state. Similarly, we created variable “brewery”, to produce unique set of breweries in data set. We didn't have to do too many preparation steps to get the medal details but we had some additional data preparation steps for our brewery visualization.
-|       We transformed the brewery names to first remove any duplicates that had extra/fuzzy characters. We created a data frame for decision making removing the duplicates. We then removed breweries that have similar names but in different cities. We made a dictionary with replacements, if the brewery names are not unique. We then did some additional data preparation steps in order to create two sets, one before the duplicates are fixed and one after. We are using this data to create the visualizations provided in the breweries tab
+
+`beer_awards <- beer_awards %>% mutate(state = recode(state, "wa" = "WA","Ak" = "AK"))`
+`states <- distinct(beer_awards, state)`
+`medal_colors = c("#965A38","#DFBC00","#BFC1C2")`
+`brewery<-distinct(beer_awards, brewery)`
+
+|       We transformed the brewery names to first remove any duplicates that had extra/fuzzy characters. We created a data frame for decision making removing the duplicates. We then removed breweries that have similar names but in different cities. We made a dictionary with replacements, if the brewery names are not unique. We then did some additional data preparation steps in order to create two sets, one before the duplicates are fixed and one after. We are using this data to create the visualizations provided in the breweries tab.
 
 ## 3. Encoding/Interaction Design
 
 |       For this Shiny application, our team made many design & encoding decisions. In this particular app, we had 5 inputs: State, Start Year, End Year, Brewery name and Minimum Medals. We are using these four inputs to vary the output that the user sees. For the medals tab, we want the user to be able to control the state, start year, and end year so that we can provide a visualization of that particular state's medal count over the years. We wanted the plot to be interactive so that the user can hover over various sections and get the details and we used Plotly in order to achieve that. We also wanted to avoid the use to red and green hues in our chart so we used the Gold/Silver/Bronze coloring and this also added to the overall coherence of the visualization.
+
+![UI Design](images/ui.png)
+
 |       For the brewery tab, we have the brewery name and minimum medals as the customer input. Our vision for this visualization was to identify potential data errors when it comes to brewery names that could have caused the medal counts to be inaccurate. Once the user runs the app, the app loads the top 30 breweries by Medal count. In this visualization, we wanted to show the ranking of the breweries before and after the duplicates were removed. We also decided to add in a visualization that shows the introduction of the duplicate name so that the user is really able to see the fuzzy word. We added in the minimum medals input slider so that the user is able to limit how many breweries are shown in the visualization and can filter out any breweries without the minium number of medals designated by the input slider.
+
 
 ## 4. Algorithm Design
 |       For our algorithm design, our main focus was to have various inputs that were both reactive and made updates on the fly. For our first visualization, we wanted to get the medals won by a particular state over a customer range of years. The biggest challenge faced from an algorithm perspective was getting a date picker that is only limited to years. In order to work through this issue, we found some date picker html widget which had controls for the levels of dates we the user can pick. With this in place and some text parsing, we were able to pass just the year value to the reactive function which gets called on button click. This operation works very quickly and is able to output the data to both tabs (Medals & Brewery) without taking too much time to process. 
@@ -51,3 +61,17 @@ also a big learning curve for us.
 
 
 ## 7. Apendix
+We started work on this Great American Beer Festival from our Midterm Project. This data was part of the tidy tuesday datasets and we had a lot of fun exploring the different types of visualizations we can create.
+
+- [Data set link](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-10-20/readme.md)
+- [Shiny App link](https://jreji.shinyapps.io/FinalProject/)
+
+Below is the original [twitter post](https://twitter.com/hari141v/status/1319179371131760641):
+
+![Tidy Tuesday Post](images/twitter.png)
+
+For our Midterm, we built out a [FlexDashboard](https://azick-uncc.shinyapps.io/Group1/) where we re-vamped the original author's visualizations:
+
+![Medals by U.S. divisions over time](images/medals.png)
+
+![Top divions by various categories](images/divisions.png)
