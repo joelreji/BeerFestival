@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 |       For this Shiny application, our team made many design & encoding decisions. In this particular app, we had 5 inputs: State, Start Year, End Year, Brewery name and Minimum Medals. We are using these four inputs to vary the output that the user sees. For the medals tab, we want the user to be able to control the state, start year, and end year so that we can provide a visualization of that particular state's medal count over the years. We wanted the plot to be interactive so that the user can hover over various sections and get the details and we used Plotly in order to achieve that. We also wanted to avoid the use to red and green hues in our chart so we used the Gold/Silver/Bronze coloring and this also added to the overall coherence of the visualization.
 
-![UI Design](images/ui.png)
+![](images/ui.png)
 
 |       For the brewery tab, we have the brewery name and minimum medals as the customer input. Our vision for this visualization was to identify potential data errors when it comes to brewery names that could have caused the medal counts to be inaccurate. Once the user runs the app, the app loads the top 30 breweries by Medal count. In this visualization, we wanted to show the ranking of the breweries before and after the duplicates were removed. We also decided to add in a visualization that shows the introduction of the duplicate name so that the user is really able to see the fuzzy word. We added in the minimum medals input slider so that the user is able to limit how many breweries are shown in the visualization and can filter out any breweries without the minium number of medals designated by the input slider.
 
@@ -66,9 +66,13 @@ We started work on this Great American Beer Festival from our Midterm Project. T
 - [Data set link](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-10-20/readme.md)
 - [Shiny App link](https://jreji.shinyapps.io/FinalProject/)
 
+Here is the details from the data:
+
+![](images/data.png)
+
 Below is the original [twitter post](https://twitter.com/hari141v/status/1319179371131760641):
 
-![Tidy Tuesday Post](images/twitter.png)
+![](images/twitter.png)
 
 For our Midterm, we built out a [FlexDashboard](https://azick-uncc.shinyapps.io/Group1/) where we re-vamped the original author's visualizations:
 
